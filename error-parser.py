@@ -4,22 +4,10 @@ from argparse import ArgumentParser
 from glob import glob
 from os import listdir
 from os.path import isfile, join
-import colorama
+import pandas as pd
 
+result = []
 
-def progress_bar(progress, total,color =colorama.Fore.YELLOW):
-    for i in range(100): 
-        percent = 100 * (i/float(total))
-        bar = '🤖' * int(percent) + '-' * (100 - int(percent))
-        print(color + f"\r\n|{bar}|{percent:.2f}%",end ="\r")  
- 
-
-
-
-def in_directory(files, directory):
-    directory = os.path.join(os.path.realpath(directory), '')
-    file = os.path.realpath(file)
-    return os.path.commonprefix([file, directory]) == directory
 
 def getargs():
    parser = ArgumentParser()
@@ -31,16 +19,21 @@ def pprint(text):
    size = os.get_terminal_size()
    print(text.center(size.columns),"\n")
 
-
 def process(files):
    try:
+     files_list = {"sim.ps.log.gz","run.grid.out"}
      for testcase,filenames in files.items():
-         pprint(f" TESTCASE : {testcase} ")  
+         pprint(f" TESTCASE : 👉 {testcase}  ")  
+         res = {testcase:[]}
          for filename in filenames[1:]:
              pprint(f"     PROCESSING  : {filename}")
-             numbers = list(range(0,100))
-         #    progress_bar(0,100)
- 
+             if os.path.basename(filename) in files_list:
+                for line in open(filename).readlines():
+                    if "UVM_ERROR" in line:
+                       res[testcase].append(line)
+     result.append(res)  
+     df = pd.DataFrame(result)
+     df.to_excel("result.xls")                        
    except Exception as e:
      pprint(f" PROCESSING ERROR : {e}") 
 
@@ -74,4 +67,4 @@ if __name__ == "__main__":
    args = getargs()
    pprint(f"DIRECTORY TO BE PARSED  :{args.directory} \n")
    parse_errors(args.directory)
-   print(colorama.Fore.RESET)
+   print(result)
