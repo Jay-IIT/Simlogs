@@ -25,7 +25,8 @@ def process(files):
      result = []
      for testcase,filenames in files.items():
          testcase = testcase.upper()
-         pprint(f" TESTCASE : 👉 {testcase}  ")  
+         pprint(f" TESTCASE : 👉 {testcase}  ") 
+         filenames.sort(key=len) 
          for filename in filenames[1:]:
              res = []
              pprint(f"     PROCESSING  : {filename}")
@@ -48,7 +49,7 @@ def process(files):
                         result.append([testcase,line])
                         res.append(line)
                   if len(res) == 0:
-                     result.append([testcase,"     "]) 
+                     result.append([testcase,"     "])
      df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
      df.index = np.arange(1, len(df) + 1)
      df.to_excel("result.xls")                        
