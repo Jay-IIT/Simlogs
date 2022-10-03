@@ -31,8 +31,7 @@ def process(files):
                 for line in open(filename).readlines():
                     if "UVM_ERROR" in line:
                        res[testcase].append(line)
-     result.append(res)  
-     df = pd.DataFrame(result)
+     df = pd.DataFrame.from_records(result)
      df.to_excel("result.xls")                        
    except Exception as e:
      pprint(f" PROCESSING ERROR : {e}") 
