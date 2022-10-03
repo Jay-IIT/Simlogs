@@ -7,7 +7,7 @@ from os.path import isfile, join
 import pandas as pd
 import numpy as np
 
-result = []
+
 
 
 def getargs():
@@ -22,21 +22,20 @@ def pprint(text):
 
 def process(files):
    try:
-     files_list = {"sim.ps.log.gz","run.grid.out"}
+     result = []
+     res = dict()
      for testcase,filenames in files.items():
          testcase = testcase.upper()
          pprint(f" TESTCASE : 👉 {testcase}  ")  
-         res = {testcase:[]}
+         res[testcase] = []
          for filename in filenames[1:]:
              pprint(f"     PROCESSING  : {filename}")
-             if os.path.basename(filename) in files_list:
-                for line in open(filename).readlines():
-                    if "UVM_ERROR" in line:
-                       res[testcase].append(line)
+             for line in open(filename).readlines():
+                 if "UVM_ERROR" in line:
+                    res[testcase].append(line)
      result.append(res)
      df = pd.DataFrame({ key: pd.Series(val) for x in result for key, val in x.items() })
      df.index = np.arange(1, len(df) + 1)
-     #df = pd.DataFrame.from_records(result)
      df.to_excel("result.xls")                        
    except Exception as e:
      pprint(f" PROCESSING ERROR : {e}") 
@@ -49,15 +48,16 @@ def parse_errors(folders):
       if not os.path.exists(folders):
         pprint(f" ERROR :  {folder} Does Not Exist ")
         sys.exit()
-   
+      files_list = {"sim.ps.log.gz","run.grid.out"}
       files = {}
-      for folder in  glob(folders+"/*", recursive = True):
-          if not isfile(folder):
-             files.setdefault(os.path.basename(folder),[folder])
+      for folder in  glob(folders+"/**/*", recursive = True):
+          if isfile(folder) and  os.path.basename(folder) in files_list:
+             files.setdefault(os.path.basename(os.path.dirname(folder)),[os.path.dirname(folder)])
       for testcase,folder in files.items():
           for filenames in  glob(folder[0]+"/**/*", recursive = True):
-              if isfile(filenames):
+              if isfile(filenames) and  os.path.basename(filenames) in files_list:
                  files[testcase].append(filenames)
+      print(files)
       process(files) 
    except  Exception as e:
      pprint(f"Exception : {e}")   
