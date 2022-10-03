@@ -6,7 +6,7 @@ from os import listdir
 from os.path import isfile, join
 import pandas as pd
 import numpy as np
-
+import gzip
 
 
 
@@ -30,7 +30,12 @@ def process(files):
          res[testcase] = []
          for filename in filenames[1:]:
              pprint(f"     PROCESSING  : {filename}")
-             for line in open(filename).readlines():
+             if filename.endswith(".gz"):
+                a_file = gzip.open(filename, "rb")
+                contents = a_file.read()
+             else:
+                contents = open(filename).readlines()   
+             for line in contents:
                  if "UVM_ERROR" in line:
                     res[testcase].append(line)
      result.append(res)
