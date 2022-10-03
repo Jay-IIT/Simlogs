@@ -27,17 +27,28 @@ def process(files):
          testcase = testcase.upper()
          pprint(f" TESTCASE : 👉 {testcase}  ")  
          for filename in filenames[1:]:
+             res = []
              pprint(f"     PROCESSING  : {filename}")
              if filename.endswith(".gz"):
                 fp = gzip.open(filename, "rb")
                 contents = fp.read()
                 fp.close()
                 contents = contents.decode('utf-8')
+                for line in contents:
+                  if "UVM_ERROR" in line:
+                     result.append([testcase,line])
+                     res.append(line)
+                  if len(res) == 0:
+                     result.append([testcase,"     "]) 
+                continue   
              else:
-                contents = open(filename).readlines()   
-             for line in contents:
-                 if "UVM_ERROR" in line:
-                    result.append([testcase,line])
+                with open(filename,'r',buffering=100000) as f:
+                  for line in f:
+                     if "UVM_ERROR" in line:
+                        result.append([testcase,line])
+                        res.append(line)
+                  if len(res) == 0:
+                     result.append([testcase,"     "]) 
      df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
      df.index = np.arange(1, len(df) + 1)
      df.to_excel("result.xls")                        
@@ -53,6 +64,7 @@ def parse_errors(folders):
         pprint(f" ERROR :  {folder} Does Not Exist ")
         sys.exit()
       files_list = {"sim.ps.log.gz","run.grid.out"}
+       
       files = {}
       for folder in  glob(folders+"/**/*", recursive = True):
           if isfile(folder) and  os.path.basename(folder) in files_list:
@@ -61,6 +73,9 @@ def parse_errors(folders):
           for filenames in  glob(folder[0]+"/**/*", recursive = True):
               if isfile(filenames) and  os.path.basename(filenames) in files_list:
                  files[testcase].append(filenames)
+                
+               
+
       process(files) 
    except  Exception as e:
      pprint(f"Exception : {e}")   
