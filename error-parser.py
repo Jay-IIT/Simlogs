@@ -63,7 +63,6 @@ def parse_errors(folders):
           for filenames in  glob(folder[0]+"/**/*", recursive = True):
               if isfile(filenames) and  os.path.basename(filenames) in files_list:
                  files[testcase].append(filenames)
-      print(files)
       process(files) 
    except  Exception as e:
      pprint(f"Exception : {e}")   
