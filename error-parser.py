@@ -38,8 +38,6 @@ def process(files):
              for line in contents:
                  if "UVM_ERROR" in line:
                     result.append([testcase,line])
-     
-     #print(result)
      df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
      df.index = np.arange(1, len(df) + 1)
      df.to_excel("result.xls")                        
