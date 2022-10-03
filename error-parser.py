@@ -31,8 +31,10 @@ def process(files):
          for filename in filenames[1:]:
              pprint(f"     PROCESSING  : {filename}")
              if filename.endswith(".gz"):
-                a_file = gzip.open(filename, "rb")
-                contents = a_file.read()
+                fp = gzip.open(filename, "rb")
+                contents = fp.read()
+                fp.close()
+                contents = contents.decode('utf-8')
              else:
                 contents = open(filename).readlines()   
              for line in contents:
