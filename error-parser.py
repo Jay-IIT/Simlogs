@@ -23,11 +23,9 @@ def pprint(text):
 def process(files):
    try:
      result = []
-     res = dict()
      for testcase,filenames in files.items():
          testcase = testcase.upper()
          pprint(f" TESTCASE : 👉 {testcase}  ")  
-         res[testcase] = []
          for filename in filenames[1:]:
              pprint(f"     PROCESSING  : {filename}")
              if filename.endswith(".gz"):
@@ -39,9 +37,10 @@ def process(files):
                 contents = open(filename).readlines()   
              for line in contents:
                  if "UVM_ERROR" in line:
-                    res[testcase].append(line)
-     result.append(res)
-     df = pd.DataFrame({ key: pd.Series(val) for x in result for key, val in x.items() })
+                    result.append([testcase,line])
+     
+     #print(result)
+     df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
      df.index = np.arange(1, len(df) + 1)
      df.to_excel("result.xls")                        
    except Exception as e:
