@@ -66,4 +66,3 @@ if __name__ == "__main__":
    args = getargs()
    pprint(f"DIRECTORY TO BE PARSED  :{args.directory} \n")
    parse_errors(args.directory)
-   print(result)
