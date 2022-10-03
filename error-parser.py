@@ -5,6 +5,7 @@ from glob import glob
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
+import numpy as np
 
 result = []
 
@@ -23,6 +24,7 @@ def process(files):
    try:
      files_list = {"sim.ps.log.gz","run.grid.out"}
      for testcase,filenames in files.items():
+         testcase = testcase.upper()
          pprint(f" TESTCASE : 👉 {testcase}  ")  
          res = {testcase:[]}
          for filename in filenames[1:]:
@@ -32,7 +34,8 @@ def process(files):
                     if "UVM_ERROR" in line:
                        res[testcase].append(line)
      result.append(res)
-     df = pd.DataFrame({ key: pd.Series(val) for key, val in x.items() for x in result})
+     df = pd.DataFrame({ key: pd.Series(val) for x in result for key, val in x.items() })
+     df.index = np.arange(1, len(df) + 1)
      #df = pd.DataFrame.from_records(result)
      df.to_excel("result.xls")                        
    except Exception as e:
@@ -43,19 +46,19 @@ def process(files):
 
 def parse_errors(folders):
    try:
-     if not os.path.exists(folders):
+      if not os.path.exists(folders):
         pprint(f" ERROR :  {folder} Does Not Exist ")
         sys.exit()
    
-     files = {}
-     for folder in  glob(folders+"/*", recursive = True):
-         if not isfile(folder):
-            files.setdefault(os.path.basename(folder),[folder])
-     for testcase,folder in files.items():
-         for filenames in  glob(folder[0]+"/**/*", recursive = True):
-             if isfile(filenames): 
-             	files[testcase].append(filenames)
-     process(files)
+      files = {}
+      for folder in  glob(folders+"/*", recursive = True):
+          if not isfile(folder):
+             files.setdefault(os.path.basename(folder),[folder])
+      for testcase,folder in files.items():
+          for filenames in  glob(folder[0]+"/**/*", recursive = True):
+              if isfile(filenames):
+                 files[testcase].append(filenames)
+      process(files) 
    except  Exception as e:
      pprint(f"Exception : {e}")   
 
