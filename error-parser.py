@@ -37,6 +37,7 @@ def process(files):
      result = []
      peak_result =[]
      testcases = set()
+     """ ⬇️ Set priorities  """
      priority = ["sim.ps.log.gz","sim.log.gz"]
      for testcase,filenames in files.items():
          testcase = testcase.upper()
