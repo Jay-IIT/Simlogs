@@ -59,7 +59,7 @@ def process(files):
                         testcases.add(testcase)
                   if len(res) == 0:
                      result.append([testcase,"     "]) 
-                     peak_result.append([testcase,"     "])      
+                          
              else:
                # Code is used if its not gz file 
                with open(filename,'r',buffering=100000) as f:
@@ -74,7 +74,7 @@ def process(files):
                         testcases.add(testcase)
                   if len(res) == 0:
                      result.append([testcase,"     "]) 
-                     peak_result.append([testcase,"     "]) 
+                     
              continue
  
      df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
