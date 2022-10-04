@@ -16,8 +16,8 @@ T = TypeVar("T")
 def sort_by_priority_list(values, priority ):
     priority_dict = {k: i for i, k in enumerate(priority)}
     def priority_getter(value):
-        return priority_dict.get(value, len(values))
-    return sorted(values, key=priority_getter)[::-1]
+        return priority_dict.get(os.path.basename(value), len(values))
+    return sorted(values, key=priority_getter) 
 
 def getargs():
    parser = ArgumentParser()
@@ -45,7 +45,7 @@ def process(files):
          for filename in filenames:
              res = []
              pprint(f"     PROCESSING  : {filename}")
-             if  filename.endswith(".gz1"):
+             if  filename.endswith(".gz"):
                 with gzip.open( filename, 'rb') as f:
                   for line in f: 
                      if srch in line:
@@ -54,12 +54,11 @@ def process(files):
                      if len(res) == 1 and testcase not in testcases:
                         peak_result.append([testcase,line])
                         testcases.add(testcase)
-                     if len(res) == 0:
-                        result.append([testcase,"     "]) 
-                        peak_result.append([testcase,"     "]) 
-                     
-                continue
+                  if len(res) == 0:
+                     result.append([testcase,"     "]) 
+                     peak_result.append([testcase,"     "])      
              else:
+               # Code is used if its not gz file 
                with open(filename,'r',buffering=100000) as f:
                   for line in f:
                      if srch in line:
@@ -71,6 +70,8 @@ def process(files):
                   if len(res) == 0:
                      result.append([testcase,"     "]) 
                      peak_result.append([testcase,"     "]) 
+             continue
+ 
      df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
      df.index = np.arange(1, len(df) + 1)
      peak_df = pd.DataFrame.from_records(peak_result,columns=["Testcase","Errors"])
@@ -80,9 +81,6 @@ def process(files):
       peak_df.to_excel(writer, sheet_name='Peak')                      
    except Exception as e:
      pprint(f" PROCESSING ERROR : {e}") 
-
-
-
 
 def parse_errors(folders):
    try:
