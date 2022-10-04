@@ -8,11 +8,21 @@ import pandas as pd
 import numpy as np
 import gzip
 
+from typing import Iterable, List, TypeVar
 
+T = TypeVar("T")
+
+
+def sort_by_priority_list(values, priority ):
+    priority_dict = {k: i for i, k in enumerate(priority)}
+    def priority_getter(value):
+        return priority_dict.get(value, len(values))
+    return sorted(values, key=priority_getter)[::-1]
 
 def getargs():
    parser = ArgumentParser()
    parser.add_argument("-dir", "--directory",help="starts parsing the directory")
+   parser.add_argument("-search", "--search",help="starts parsing the directory",required=False,default="UVM_ERROR")
    args = parser.parse_args()
    return args
 
@@ -22,37 +32,52 @@ def pprint(text):
 
 def process(files):
    try:
+     srch = args.search.upper()
+     pprint(f"👋 Searching For  🔎 {srch}  ")
      result = []
+     peak_result =[]
+     testcases = set()
+     priority = ["sim.ps.log.gz","sim.log.gz"]
      for testcase,filenames in files.items():
          testcase = testcase.upper()
          pprint(f" TESTCASE : 👉 {testcase}  ") 
-         filenames.sort(key=len) 
-         for filename in filenames[1:]:
+         filenames = sort_by_priority_list(filenames,priority) 
+         for filename in filenames:
              res = []
              pprint(f"     PROCESSING  : {filename}")
-             if filename.endswith(".gz"):
-                fp = gzip.open(filename, "rb")
-                contents = fp.read()
-                fp.close()
-                contents = contents.decode('utf-8')
-                for line in contents:
-                  if "UVM_ERROR" in line:
-                     result.append([testcase,line])
-                     res.append(line)
-                  if len(res) == 0:
-                     result.append([testcase,"     "]) 
-                continue   
-             else:
-                with open(filename,'r',buffering=100000) as f:
-                  for line in f:
-                     if "UVM_ERROR" in line:
+             if  filename.endswith(".gz1"):
+                with gzip.open( filename, 'rb') as f:
+                  for line in f: 
+                     if srch in line:
                         result.append([testcase,line])
                         res.append(line)
+                     if len(res) == 1 and testcase not in testcases:
+                        peak_result.append([testcase,line])
+                        testcases.add(testcase)
+                     if len(res) == 0:
+                        result.append([testcase,"     "]) 
+                        peak_result.append([testcase,"     "]) 
+                     
+                continue
+             else:
+               with open(filename,'r',buffering=100000) as f:
+                  for line in f:
+                     if srch in line:
+                        result.append([testcase,line])
+                        res.append(line)
+                     if len(res) == 1 and testcase not in testcases:
+                        peak_result.append([testcase,line])   
+                        testcases.add(testcase)
                   if len(res) == 0:
-                     result.append([testcase,"     "])
+                     result.append([testcase,"     "]) 
+                     peak_result.append([testcase,"     "]) 
      df = pd.DataFrame.from_records(result,columns=["Testcase","Errors"])
      df.index = np.arange(1, len(df) + 1)
-     df.to_excel("result.xls")                        
+     peak_df = pd.DataFrame.from_records(peak_result,columns=["Testcase","Errors"])
+     peak_df.index = np.arange(1, len(peak_df) + 1)
+     with pd.ExcelWriter('Results.xlsx') as writer:
+      df.to_excel(writer, sheet_name='Detailed')
+      peak_df.to_excel(writer, sheet_name='Peak')                      
    except Exception as e:
      pprint(f" PROCESSING ERROR : {e}") 
 
@@ -64,19 +89,11 @@ def parse_errors(folders):
       if not os.path.exists(folders):
         pprint(f" ERROR :  {folder} Does Not Exist ")
         sys.exit()
-      files_list = {"sim.ps.log.gz","run.grid.out"}
-       
+      files_list = {"sim.ps.log.gz","sim.log.gz"}
       files = {}
-      for folder in  glob(folders+"/**/*", recursive = True):
-          if isfile(folder) and  os.path.basename(folder) in files_list:
-             files.setdefault(os.path.basename(os.path.dirname(folder)),[os.path.dirname(folder)])
-      for testcase,folder in files.items():
-          for filenames in  glob(folder[0]+"/**/*", recursive = True):
-              if isfile(filenames) and  os.path.basename(filenames) in files_list:
-                 files[testcase].append(filenames)
-                
-               
-
+      for folder in  glob(folders+"/**/*.gz", recursive = True): 
+          if os.path.basename(folder) in files_list:
+             files.setdefault(os.path.basename(os.path.dirname(folder)),[]).append(folder)  
       process(files) 
    except  Exception as e:
      pprint(f"Exception : {e}")   
