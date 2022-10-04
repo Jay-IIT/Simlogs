@@ -48,7 +48,9 @@ def process(files):
              pprint(f"     PROCESSING  : {filename}")
              if  filename.endswith(".gz"):
                 with gzip.open( filename, 'rb') as f:
-                  for line in f: 
+                  for line in f:
+                     if isinstance(line, (bytes, bytearray)):
+                        line = line.decode("utf-8") 
                      if srch in line:
                         result.append([testcase,line])
                         res.append(line)
@@ -62,6 +64,8 @@ def process(files):
                # Code is used if its not gz file 
                with open(filename,'r',buffering=100000) as f:
                   for line in f:
+                     if isinstance(line, (bytes, bytearray)):
+                        line = line.decode("utf-8") 
                      if srch in line:
                         result.append([testcase,line])
                         res.append(line)
